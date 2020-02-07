@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 /*
 	go语言的运算符
@@ -19,6 +22,11 @@ import "fmt"
 	var arr [2]int
 	切片 不需要指定,自动扩容
 	var s []int
+	map 键值对存储,无序
+	var m map[int]string
+	切片和map使用前都需要初始化 都是引用类型,数组是值类型
+	值类型和引用类型的区别:值类型声明时都是对应数据类型的0值,引用类型声明后是nil,初始化后才会在内存中开辟空间
+	make([]string,10,20)
 */
 
 func main() {
@@ -40,7 +48,7 @@ func _array() {
 	//二维数组 外层可以省略,但是内层不能省略...
 	var arr3 = [...][3]int{
 		[...]int{1, 2, 3},
-		{4, 5, 6},
+		{4, 5, 6}, //需要注意的末尾的 ,
 	}
 	fmt.Println(arr3)
 
@@ -63,7 +71,7 @@ func _array() {
 
 /*
 	与数组不同的是切片指定的是 底层数组 开始索引 切片长度
-	切片未指定长度,切片随着存入东西的增加可以自动扩容,小于1024长度扩容直接翻倍,大于1024,扩容25%,如果大于1024长度一次申请的内存大于25%,直接扩容至申请的长度
+	切片未指定长度,切片随着存入东西的增加可以自动扩容,小于1024长度扩容直接翻倍,大于1024,newcap+=newcap/4,
 */
 func _slice() {
 	//切片是引用类型不能直接比较,只能和nil比较
@@ -165,10 +173,48 @@ func _map() {
 	fmt.Println(m == nil)       //没有初始化 不能直接用 没有在内存中开辟空间
 	m = make(map[int]string, 5) //初始化时定好大小,避免在运行期间再动态扩容
 	m[1] = "zzz"
+	m[2] = "aaa"
+
 	fmt.Println(m)
 	//取值
 	s, ok := m[1]
 	if ok {
 		fmt.Println(s)
 	}
+	//遍历 map是以哈希的方式存储key,存的值与存入的顺序无关
+	//如果只想取key  k:=range m
+	//只想取value 	_,v:=range m
+	for k, v := range m {
+		fmt.Printf("key:%d value:%s\n", k, v)
+	}
+	/*
+		如果想把map存入的数据排序取出来
+			先将key取出排序 再根据排好顺序的key取值
+	*/
+	m1 := make(map[int]int, 10)
+	for i := 0; i < 10; i++ {
+		m1[rand.Intn(100)] = i
+	}
+	fmt.Printf("未排序map:%v\n", m1)
+	s1 := make([]int, 10, 10)
+	i := 0
+	for k := range m1 {
+		s1[i] = k
+		i++
+	}
+	fmt.Printf("排序好的key:%v\n", s1)
+	/*
+		切片和map的嵌套
+		需要注意的是 切片和map都需要make开辟空间
+	*/
+	s2 := make([]map[int]int, 10, 10)
+	s2[0] = make(map[int]int)
+	s2[0][100] = 10
+	fmt.Printf("初始化完成的切片存map:%v\n", s2)
+
+	m2 := make(map[int][]int, 10)
+	m2[10] = []int{10, 12, 23}
+	fmt.Println(m2)
+	fmt.Println(m2[1]) //key对应的value不存在,返回的是对应value类型的0值
+	delete(m2, 1)      //删除对应的key
 }
