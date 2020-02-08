@@ -17,6 +17,15 @@ import (
 	而且与java语言不同,go可以多返回值,返回值可以用 _ 丢弃不用
 	多返回值,命名返回值需要用()括起来
 */
+/*
+	内置函数
+	close 主要用来关闭channel
+	len 求长度 string array slice map channel
+ 	new 分配内存 主要分配值类型 如 int struct 返回的指针
+ 	make 分配内存 主要分配引用类型 chan map slice
+	append 追加数组元素到数组,slice中
+	panic和recover 用来错误处理
+*/
 func main() {
 	var arr [10]string
 	fmt.Println(arr)
@@ -37,7 +46,9 @@ func main() {
 	fun3()
 	fun4(fun1)
 	//闭包的使用
+	bb4()
 	addr3()
+	test()
 }
 
 /*
@@ -219,24 +230,32 @@ func f4() {
 /*	闭包 一个函数及相关引用组合的实体   闭包=函数+引用环境
 	闭包:对于参数不匹配函数的调用,通常使用闭包来解决
 	场景: bb1是你同事写的代码,而你无权修改,但你又需要将bb2传到bb1里
+
+	这个例子里 bb1 就是需要接收bb2作为参数的函数, bb3就是封装bb2的函数
+
 */
 
 func bb1(f func()) {
 	fmt.Println("is bb1")
+	f()
 }
 func bb2(x, y int) {
 	fmt.Println("is bb2")
 	fmt.Println(x + y)
 }
 func bb3(f func(int, int), x, y int) func() {
-
+	fmt.Println("is bb3")
 	ff := func() {
 		f(x, y)
 	}
 	return ff
 }
 func bb4() {
-	bb1(bb3(bb2, 1, 2))
+	fmt.Println("闭包例子:")
+	f := bb3(bb2, 1, 2)
+	fmt.Println("这里bb2还没运行")
+	bb1(f)
+	//函数运行的先后顺序 bb3 -> bb1 -> bb2 这就是闭包的意义所在
 }
 
 /*
@@ -247,6 +266,11 @@ func bb4() {
 		return x + i
 	}
 	f1接收的是 f (其实本身是一个函数) 返回的参数 return x + i
+
+	闭包是什么? 一个函数,包含了这个函数外部的变量 这个例子中 f 就是一个闭包
+	闭包利用的底层原理:
+	1.函数可以作为返回值
+	2.函数查找参数的顺序,现在自己内部找,找不到再往上层找
 */
 
 func addr() func(int) int {
@@ -265,4 +289,41 @@ func addr3() {
 	f := addr()
 	f1 := f(100)
 	fmt.Println(f1)
+}
+
+func test() {
+	//txtFunc就是一个引入了外部参数的函数,感觉有点像java的工厂模式
+	txtFunc := addSuffix(".txt")
+	fmt.Println(txtFunc("xiaomi"))
+	fmt.Println(txtFunc("xiaomi.txt"))
+	//
+	f1, f2 := calc(100)
+	fmt.Println("calc执行结果:", f1(15), f2(50)) //115 65
+}
+
+/*
+	给文件名加后缀
+*/
+func addSuffix(suffix string) func(string) string {
+	return func(name string) string {
+		if !strings.HasSuffix(name, suffix) {
+			return name + suffix
+		}
+		return name
+	}
+}
+
+/*
+	校验同步 返回的函数add 和 sub 公用了参数base 最后返回的结果函数 f1 f2 给他们分别传参 最终得到一个同步的效果,运行一个函数会影响另一个函数的base值
+*/
+func calc(base int) (func(int) int, func(int) int) {
+	add := func(x int) int {
+		base += x
+		return base
+	}
+	sub := func(x int) int {
+		base -= x
+		return base
+	}
+	return add, sub
 }
