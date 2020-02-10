@@ -7,6 +7,11 @@ first
   operational #go语言的运算符 map,slice,数组,指针的使用
 function     #各种类型函数的创建和调用,闭包的使用
 panic_recover #go语言错误处理方法 defer 分金币例子 fmt包一些常用的函数
-recursion #递归
+recursion #递归 
+    类型 自定义类型  
+    结构体 匿名结构体 指针结构体 结构体初始化的多种方式 结构体的匿名字段 构造函数 嵌套 "继承"
+           结构体与json 序列化与反序列化
+method #自定义类型的自定义函数 结构体的函数
+    student_system  #运用结构体的规则编写的一个简单的管理系统
 ```
 
