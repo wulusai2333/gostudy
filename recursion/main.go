@@ -182,10 +182,10 @@ type zoo struct {
 
 func niming() {
 	// 类型名即字段名,同类型名不能有两个匿名字段,要不就冲突了
-	var p = struct {
+	var p = struct { //匿名结构体 前面的{}是定义结构体 后面的是给结构体字段赋值
 		string
 		int
-	}{}
+	}{"小红", 11}
 	p.int = 10
 	p.string = "小明"
 	fmt.Println(p)
