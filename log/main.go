@@ -9,12 +9,12 @@ import (
 )
 
 /*
-	自己写一个日志库
+
 	打开文件
 	*File,err := os.Open("file/index")
 	defer os.close()
 
-	写一个log日志包包含 error debug warn info
+	文件读写的几种方法
 */
 func main() {
 	readFile()
@@ -25,8 +25,46 @@ func main() {
 	ioutil_write()
 	//use_bufio_get_user_input() //获取用户输入 可以带空格 这里注释掉以免影响程序运行流畅性
 	copyFile()
+	insertFile()
 }
 
+/*
+	关闭文件资源
+*/
+/*func fileClose(file *os.File) {
+	if err := file.Close(); err != nil {
+		fmt.Println("file close failed,err", err)
+		return
+	}
+}*/
+/*
+	在文件中间插入字符
+	具体思路:
+		将文件指针移动到光标处
+
+*/
+func insertFile() {
+	file, err := os.OpenFile("log/a.txt", os.O_RDWR, 0644)
+	if err != nil {
+		fmt.Printf("open file failed,err: %v\n", err)
+		return
+	}
+	defer file.Close()
+	//将文件指针移动到3字节处
+	_, err = file.Seek(3, 0)
+	if err != nil {
+		fmt.Println("seek file failed,err:", err)
+	}
+	//覆盖修改后面的字节
+	_, err = file.Write([]byte{'a', 'b', 'c'})
+	if err != nil {
+		fmt.Println("write file failed, err:", err)
+	}
+}
+
+/*
+	复制文件
+*/
 func copyFile() {
 	/*
 		copy from
@@ -46,6 +84,7 @@ func copyFile() {
 		return
 	}
 	defer fileWrite.Close()
+
 	/*
 		copy
 	*/
