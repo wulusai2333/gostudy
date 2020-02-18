@@ -45,7 +45,7 @@ func main() {
 	replaceValue(&b)
 	fmt.Println(b)
 	mysql := Mysql{}
-	ini.LoadIni(mysql, "json")
+	ini.LoadIni(&mysql, "json")
 	fmt.Println(mysql)
 }
 

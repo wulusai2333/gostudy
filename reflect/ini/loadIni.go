@@ -60,14 +60,31 @@ func LoadIni(x interface{}, tagName string) {
 	i := ini
 	fmt.Println(i)
 	//set value start
+	/*
+			反射获取类型信息和获取值信息是分开的,需要注意何时需要什么
+			比如在开始获取了结构体指针,就需要先获取值 v:=reflect.ValueOf(x) 这个值就是外面传进来的结构体
+			fieldNum:= v.NumField() 获取值的字段个数并遍历
+			field :=v.Field(i) 获取单个字段
+			fieldType:=field.Kind() 获取字段的底层类型
+		switch fieldType
+		case reflect.Int:
+			field.Elem().SetInt(value) 设置字段的值
+	*/
 	//获取类型信息
 	t := reflect.TypeOf(x) //t 是目标结构体的类型
-	//获取值
+	fmt.Printf("%v\n", t.Elem())
+	//获取值信息
 	v := reflect.ValueOf(x) //v 是目标结构体的值
+	/*	fieldNum:= v.NumField()
+		field :=v.Field(i)	//获取字段
+		fieldType:=field.Kind() 	//获取字段类型
+		reflect.Int
+		field.Elem().Set()//设置字段的值*/
 	//TODO 赋值还未成功实现
+	//json.Unmarshal()
 	//将值赋予对象
 	var confName = t.Name()
-	for i := 0; i < t.NumField(); i++ {
+	for i := 0; i < t.Elem().NumField(); i++ {
 		f := t.Field(i)                                //获取字段 f是目标结构体的一个字段
 		tag := f.Tag.Get(tagName)                      //字段的标签名
 		if value := ini[confName][tag]; value != nil { //该字段的值
@@ -92,15 +109,13 @@ func LoadIni(x interface{}, tagName string) {
 				if err != nil {
 					fmt.Println("change fieldValue type to int failed,err:", err)
 				}
-				v.Field(i).SetInt(a)
+				v.Elem().Field(i).SetInt(a)
 			case "string":
 				if fieldValue != "" {
 					//a := fieldValue
 					//v.Field(i).SetString(a)
 				}
-
 			default:
-
 			}
 
 		}

@@ -24,6 +24,7 @@ type FileLogger struct {
 	MaxFileSize int64
 	file        *os.File //存放日志文件对象
 	errFile     *os.File
+	logChan     chan *logMsg //添加一个通道在日志对象中
 }
 
 /*
@@ -40,11 +41,13 @@ func NewFileLogger(loglevel Loglevel, filePath string, fileName string, maxFileS
 		FilePath:    filePath,
 		FileName:    fileName,
 		MaxFileSize: maxFileSize,
+		logChan:     make(chan *logMsg, 50000), //初始化设定通道的大小
 	}
 	err := f.initFile()
 	if err != nil {
 		panic(err)
 	}
+
 	return
 }
 
@@ -66,6 +69,8 @@ func (f *FileLogger) initFile() (err error) {
 		return err
 	}
 	f.errFile = errFile
+	//启用goroutine线程打印日志
+	go f.logForBackground()
 	return
 }
 
@@ -78,28 +83,66 @@ func (f *FileLogger) Close() {
 }
 
 /*
-	日志打印格式
+	异步打印日志
 */
 func (f *FileLogger) log(logLevelName string, format string, a ...interface{}) {
-	f.checkFileSizeAndSplitFile()
 	str := fmt.Sprintf(format, a...)
 	file, funcName, line := getInfo(3)
 	now := time.Now().Format("2006-01-02 15:04:05")
-	//日志文件
-	_, err := fmt.Fprintf(f.file, "[%s] %s [%s %s:%d] %s\n", now, logLevelName, file, funcName, line, str)
-	//fmt.Println(n)
-	if err != nil {
-		fmt.Println("write file log failed , err:", err)
+	//创建日志信息对象,把日志存进去
+	logTmp := &logMsg{
+		now:          now,
+		logLevelName: logLevelName,
+		file:         file,
+		funcName:     funcName,
+		line:         line,
+		str:          str,
+	}
+	//通道没满就存,满了就什么也不做
+	select {
+	case f.logChan <- logTmp:
+
+	default:
 	}
 
-	//错误日志文件
-	if logLevelName == "Error" || logLevelName == "Fatal" {
-		f.checkErrFileSizeAndSplitErrFile()
-		_, err = fmt.Fprintf(f.errFile, "[%s] %s [%s %s:%d] %s\n", now, logLevelName, file, funcName, line, str)
-		if err != nil {
-			fmt.Println("write file log failed , err:", err)
-		}
+}
 
+type logMsg struct {
+	now          string
+	logLevelName string
+	file         string
+	funcName     string
+	line         int
+	str          string
+}
+
+/*
+	日志打印格式
+*/
+func (f *FileLogger) logForBackground() {
+	for {
+		select {
+		case l := <-f.logChan:
+			f.checkFileSizeAndSplitFile()
+			//日志文件
+			_, err := fmt.Fprintf(f.file, "[%s] %s [%s %s:%d] %s\n", l.now, l.logLevelName, l.file, l.funcName, l.line, l.str)
+			//fmt.Println(n)
+			if err != nil {
+				fmt.Println("write file log failed , err:", err)
+			}
+
+			//错误日志文件
+			if l.logLevelName == "Error" || l.logLevelName == "Fatal" {
+				f.checkErrFileSizeAndSplitErrFile()
+				_, err = fmt.Fprintf(f.errFile, "[%s] %s [%s %s:%d] %s\n", l.now, l.logLevelName, l.file, l.funcName, l.line, l.str)
+				if err != nil {
+					fmt.Println("write file log failed , err:", err)
+				}
+
+			}
+		default:
+			time.Sleep(time.Millisecond * 500) //没有日志需要处理就休息半秒,释放cpu
+		}
 	}
 }
 
@@ -152,7 +195,7 @@ func (f *FileLogger) checkErrFileSizeAndSplitErrFile() {
 
 		newErrFileName := f.FilePath + f.FileName + t + "_err.log"
 		//f.FileName = newErrFileName
-		oldErrFileRelName := path.Join(f.FilePath + errFileInfo.Name()) //旧文件的全路径名
+		oldErrFileRelName := path.Join(f.FilePath + errFileInfo.Name()) //旧文件的相对路径名
 		//关闭当前文件
 		f.errFile.Close()
 		err = os.Rename(oldErrFileRelName, newErrFileName) //修改保存的文件名
