@@ -1,6 +1,9 @@
 **/target/
 **/*.iml
 **/*.log
+**/*.exe
+**/*.pprof
+**/*.out
 .idea/
 .DS_Store
 /fabric-edge/src/test/

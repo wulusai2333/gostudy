@@ -29,5 +29,11 @@ synchronized 互斥锁 读写分离锁
     atomic 原子操作
 socket 创建网络连接
     udp udp连接通信
+    http http网络链接  get/post方法
+test #测试 
+    split 基本测试,测试组,子测试
+    test benchmark性能测试 比较测试 并行测试 重置时间 Example生成文档
+pprof #性能测试 cpu时间,内存占用 web图形化展示 (火焰图,net/http/pprof)还未使用
+    flag flag包传参的使用
 ```
 

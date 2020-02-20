@@ -22,19 +22,19 @@ func main() {
 	defer conn.Close()
 	var data [1024]byte
 	//读取客户端发送数据
-	for {
-		i, addr, err := conn.ReadFromUDP(data[:])
-		if err != nil {
-			fmt.Println("server conn read data failed,err:", err)
-		}
-		fmt.Println(addr.String(), data[:i])
-		//返回数据
-		replace := strings.ToUpper(string(data[:i]))
-		n, err := conn.WriteToUDP([]byte(replace), addr)
-		if err != nil {
-			fmt.Println("send replace to udp failed,err:", err)
-			return
-		}
-		fmt.Println(n)
+
+	i, addr, err := conn.ReadFromUDP(data[:])
+	if err != nil {
+		fmt.Println("server conn read data failed,err:", err)
 	}
+	fmt.Println(addr.String(), data[:i])
+	//返回数据
+	replace := strings.ToUpper(string(data[:i]))
+	n, err := conn.WriteToUDP([]byte(replace), addr)
+	if err != nil {
+		fmt.Println("send replace to udp failed,err:", err)
+		return
+	}
+	fmt.Println(n)
+
 }
