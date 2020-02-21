@@ -3,6 +3,7 @@
 **/*.log
 **/*.exe
 **/*.pprof
+**/*.prof
 **/*.out
 .idea/
 .DS_Store

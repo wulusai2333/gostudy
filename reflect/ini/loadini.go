@@ -48,7 +48,8 @@ var ini = make(map[string]map[string][]byte, 10)
 	载入配置文件
 */
 func LoadIni(x interface{}, tagName string) {
-	configFile, err := os.OpenFile("reflect/ini/config.ini", os.O_RDONLY, 0644)
+	//关于文件名 使用控制台 go build 执行 .exe 可执行文件 应该改为 "./config.ini"
+	configFile, err := os.OpenFile("./config.ini", os.O_RDONLY, 0644)
 	if err != nil {
 		fmt.Println("open file failed,err:", err)
 		return
@@ -57,80 +58,74 @@ func LoadIni(x interface{}, tagName string) {
 	reader := bufio.NewReader(configFile)
 	//读取配置到map
 	readConf(reader)
-	i := ini
-	fmt.Println(i)
-	//set value start
-	/*
-			反射获取类型信息和获取值信息是分开的,需要注意何时需要什么
-			比如在开始获取了结构体指针,就需要先获取值 v:=reflect.ValueOf(x) 这个值就是外面传进来的结构体
-			fieldNum:= v.NumField() 获取值的字段个数并遍历
-			field :=v.Field(i) 获取单个字段
-			fieldType:=field.Kind() 获取字段的底层类型
-		switch fieldType
-		case reflect.Int:
-			field.Elem().SetInt(value) 设置字段的值
-	*/
-	//获取类型信息
-	t := reflect.TypeOf(x) //t 是目标结构体的类型
-	fmt.Printf("%v\n", t.Elem())
-	//获取值信息
-	v := reflect.ValueOf(x) //v 是目标结构体的值
-	/*	fieldNum:= v.NumField()
-		field :=v.Field(i)	//获取字段
-		fieldType:=field.Kind() 	//获取字段类型
-		reflect.Int
-		field.Elem().Set()//设置字段的值*/
-	//TODO 赋值还未成功实现
-	//json.Unmarshal()
-	//将值赋予对象
-	var confName = t.Name()
-	for i := 0; i < t.Elem().NumField(); i++ {
-		f := t.Field(i)                                //获取字段 f是目标结构体的一个字段
-		tag := f.Tag.Get(tagName)                      //字段的标签名
-		if value := ini[confName][tag]; value != nil { //该字段的值
-			var values = make([][]byte, 5, 10) //字段值集合
-			for k := 0; k < len(value); k++ {
-				if value[k] == ',' {
-					values[len(values)-1] = value[:k]
-					value = value[k+1:]
-					k = 0
-					continue
-				}
-				values[len(values)-1] = value[:k]
-			}
-			var fieldValue string //字段的值
-			for index := range values {
-				fieldValue = string(values[index])
-			}
-			//判断字段类型名
-			switch c := f.Type.Kind().String(); c {
-			case "int":
-				a, err := strconv.ParseInt(fieldValue, 10, 64)
-				if err != nil {
-					fmt.Println("change fieldValue type to int failed,err:", err)
-				}
-				v.Elem().Field(i).SetInt(a)
-			case "string":
-				if fieldValue != "" {
-					//a := fieldValue
-					//v.Field(i).SetString(a)
-				}
-			default:
-			}
-
-		}
-	}
-	//set value end
-}
-
-func setValue(t reflect.Type, tagName string, v reflect.Value) {
-
+	//_oldReflect(x, tagName)
+	setValue2Struct(x, tagName)
 }
 
 /*
-	按行读取配置文件并存入map
+	反射的使用理解
+	对于指针类型的反射,需要 .Elem()来获取指针指向的结构体的值
+	对于值类型 直接 structValue.Field(i).set(值)就可以完成赋值操作
+	reflect.TypeOf(x) 获取的是类型信息,可以调用kind() ,Name()等方法获取结构体信息
+	structType.Field(i) 获取字段信息 只有字段才能.Name .Tag.Get(tagName)获取字段的信息
 */
-func readConf(reader *bufio.Reader) {
+func setValue2Struct(x interface{}, tagName string) {
+	if reflect.TypeOf(x).Kind() != reflect.Ptr { //判断传递过来的是不是指针
+		fmt.Println("x is not &ptr,please send &ptr")
+	}
+	structType := reflect.TypeOf(x).Elem()   //获取结构体类型信息
+	if structType.Kind() != reflect.Struct { //判断类型信息,如果不是结构体则返回
+		fmt.Println("this is not a struct !")
+		return
+	}
+	//获取传递过来结构体的类型信息
+	structValue := reflect.ValueOf(x).Elem() //获取结构体值信息
+	//获取传递过来结构体的值信息
+	//fmt.Printf("%#v", structValue)
+	structName := structType.Name()
+	//fmt.Println("structName", structName)
+	for i := 0; i < structType.NumField(); i++ {
+		field := structType.Field(i)       //获取字段的类型信息
+		tag := field.Tag.Get(tagName)      //获取字段的对应标签名
+		fieldValue := ini[structName][tag] //通过标签名获取从ini文件读取的字段值
+		//fmt.Println("field:", field, "tag:", tag, "fieldValue:", fieldValue)
+		if fieldValue != nil {
+			//structValue.Field(i).Elem()
+			switch structValue.Field(i).Kind() {
+			case reflect.String:
+				//fmt.Printf("这是一个String类型字段\n")
+				structValue.Field(i).SetString(string(fieldValue))
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				//fmt.Printf("这是一个int类型字段\n")
+				if len(fieldValue) == 0 {
+					continue
+				}
+				value, err := strconv.ParseInt(string(fieldValue), 10, 64)
+				if err != nil {
+					fmt.Println("fieldValue ParseInt failed,err:", err)
+					return
+				}
+				structValue.Field(i).SetInt(value)
+			}
+		}
+	}
+}
+
+/*
+		反射获取类型信息和获取值信息是分开的,需要注意何时需要什么
+		比如在开始获取了结构体指针,就需要先获取值 v:=reflect.ValueOf(x) 这个值就是外面传进来的结构体
+		fieldNum:= v.NumField() 获取值的字段个数并遍历
+		field :=v.Field(i) 获取单个字段
+		fieldType:=field.Kind() 获取字段的底层类型
+	switch fieldType
+	case reflect.Int:
+		field.Elem().SetInt(value) 设置字段的值
+*/
+
+/*
+	按行读取配置文件并存入map 此处测试完成,暂时没有bug
+*/
+func readConf(reader *bufio.Reader) map[string]map[string][]byte {
 	//var line []byte
 	//配置名
 	var confName string //这里有问题 上层循环每次循环到这里就会为confName重置
@@ -139,7 +134,7 @@ func readConf(reader *bufio.Reader) {
 		line, isPrefix, err := reader.ReadLine()
 		//readline start
 		if err != nil {
-			fmt.Println("read file end...")
+			//fmt.Println("read file end...")
 			break
 		}
 		if len(line) != 0 {
@@ -156,8 +151,8 @@ func readConf(reader *bufio.Reader) {
 			for index := range line {
 
 				if line[index] == ']' {
-					confName = string(line[1:index])
-					fmt.Println(index, "confName:", confName)
+					confName = string(line[1:index]) //这里是配置名 如: Mysql
+					//fmt.Println(index, "confName:", confName)
 					//得到一个配置名字
 					///这里不用 utils.Bytes2str(s)) 因为此方法会产生一个无法预料的错误导致此变量的指针指向一个未知的位置
 					if ini[confName] == nil {
@@ -173,27 +168,23 @@ func readConf(reader *bufio.Reader) {
 				*/
 				if line[index] == '=' {
 					fieldName := string(line[:index])
-					va := string(line[index+1:])
-					fmt.Println(fieldName, va) //打印字段名
-					fieldValues := line[index+1:]
-					fmt.Println(fieldValues) //打印字段值
+					//fmt.Println(fieldName, string(line[index+1:]))     //打印字段名和字段值
+					fieldValues := append([]byte{}, line[index+1:]...) //此处相当于重新申请了一片内存存储字段值
+					//fmt.Println(fieldValues)                           //打印字段值
 					//根据字段名将value存入
 					if confName != "" {
-						fmt.Println("confName:", confName)
+						//fmt.Println("confName:", confName)
 						ini[confName][fieldName] = fieldValues
-						fmt.Println("字段:", ini[confName][fieldName])
+						//fmt.Println("字段:", ini[confName][fieldName])
 					}
 					break
 				}
-
 			}
-
 		}
-
 		//readline end
 	}
 	//sline, err := reader.ReadString('\n')
-
+	return ini
 }
 
 //去掉注释和行末空格

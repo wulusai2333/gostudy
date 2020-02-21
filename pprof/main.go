@@ -11,6 +11,9 @@ import (
 /*
 	性能测试
 ------------------------------
+go test -bench . -cpuprofile=cpu.prof 生成cpu信息的
+go test -bench . -memprofile=mem.prof 生成内存信息的
+------------------------------
 	go-torch 和火焰图
 	go get -v github.com/uber/go-torch
 	安装FlameGraph github上下载并将FlameGraph目录并添加到环境变量中

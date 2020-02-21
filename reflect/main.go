@@ -24,13 +24,23 @@ type person struct {
   mysql 配置结构体
 */
 type Mysql struct {
-	Ip       string `json:"ip"`
-	Port     int64  `json:"port"`
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Ip       string `ini:"ip"`
+	Port     int64  `ini:"port"`
+	Name     string `ini:"name"`
+	Password string `ini:"password"`
 }
 
 func main() {
+	//反射练习
+	//reflectTest()
+	// 这段要用命令行编译运行
+	mysql := Mysql{}
+	ini.LoadIni(&mysql, "ini")
+	fmt.Printf("%#v", mysql)
+}
+
+//反射的练习
+func reflectTest() {
 	var a = 10
 	reflectType(a)
 	str := "100"
@@ -39,14 +49,10 @@ func main() {
 	reflectType(p)
 	//反射获取结构体内部字段信息
 	getField(p)
-
 	//通过反射修改字段的值
 	b := 10
 	replaceValue(&b)
 	fmt.Println(b)
-	mysql := Mysql{}
-	ini.LoadIni(&mysql, "json")
-	fmt.Println(mysql)
 }
 
 func replaceValue(b *int) {

@@ -43,7 +43,7 @@ func TestSplitGroup(t *testing.T) {
 }
 
 /*
-	子测试
+	子测试 测试代码覆盖率
 	在控制台可以
 		命令 go test -run=TestSplitSon/simple 来启动指定测试用例
 		命令 go test -cover 测试用例的覆盖率,通常要求覆盖大部分代码,最好能覆盖所有代码
