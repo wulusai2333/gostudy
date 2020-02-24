@@ -58,7 +58,7 @@ func LoadIni(x interface{}, tagName string) {
 	reader := bufio.NewReader(configFile)
 	//读取配置到map
 	readConf(reader)
-	//_oldReflect(x, tagName)
+	//给结构体赋值
 	setValue2Struct(x, tagName)
 }
 
@@ -106,6 +106,18 @@ func setValue2Struct(x interface{}, tagName string) {
 					return
 				}
 				structValue.Field(i).SetInt(value)
+			case reflect.Bool:
+				if len(fieldValue) == 0 {
+					continue
+				}
+				value, err := strconv.ParseBool(string(fieldValue))
+				if err != nil {
+					fmt.Println("fieldValue ParseInt failed,err:", err)
+					return
+				}
+				structValue.Field(i).SetBool(value)
+			default:
+				//其他的先什么都不做
 			}
 		}
 	}

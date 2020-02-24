@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>find</title>
+		<script type="text/javascript" src="js/vue.js" ></script>
+		<script type="text/javascript" src="js/axios-0.18.0.js" ></script>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+	</head>
+	<body>
+		<div id="app">
+			输入文件名:<input type="text"  v-model:value="fileObj.fname" />
+			<input type="button" value="搜索" @click="fn"><br />
+		<br/>
+		<textarea style="width: 2000px;height: 1000px;" :value="fileObj.fvalue"></textarea>
+		
+		</div>
+		
+	</body>
+	<script >
+			var x=new Vue({
+				el:"#app",
+				data:{
+					background_url:"http://127.0.0.1:12345/find",
+					fileObj:{fname:"12345",subfix:'.txt',profix:"...",fvalue:""}
+				},
+				methods:{
+					fn:function(){
+						alert(this.fileObj.fname)
+						axios.get(this.background_url,"name="+this.fileObj.fname).then((respose)=>{
+							this.fileObj.fvalue=respose.data
+						})
+					}
+				}
+			})
+			
+	</script>
+
+
+</html>
