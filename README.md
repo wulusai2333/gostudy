@@ -1,6 +1,6 @@
 # 此项目为个人学习笔记
 目录
-```shell
+```text
 first
   helloworld  #里面总结了基本数据类型的定义和使用
   byte_rune   #流程控制语句的几种使用方式
@@ -36,5 +36,8 @@ test #测试
 pprof #性能测试 cpu时间,内存占用 web图形化展示 
     flag #flag包传参的使用
     http #go-torch的安装与使用 pprof生成火焰图(已经可以不用go-torch)
+search #遍历指定目录
+    find #http服务查询遍历结果
+baiduti #百度体生成器 替换剪贴板内容为百度体
 ```
 
