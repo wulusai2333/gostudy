@@ -7,6 +7,7 @@
 **/*.out
 **/*.txt
 **/*.project
+**/*.exe
 .idea/
 .DS_Store
 /fabric-edge/src/test/
